@@ -1,224 +1,109 @@
-const employees = [];
-var filteredEmployees = [];
-const APIURL = `https://randomuser.me/api/?results=12&inc=name, picture, email, location, phone, dob &noinfo &nat=US`;
+//--------------------------------------------------------------------------------------- Variables
+
+const apiUrl = `https://randomuser.me/api/?results=12&inc=name, picture, email, location, phone, dob &noinfo &nat=US`;
+var employees = [];
 const employeeGrid = document.querySelector('.grid-container');
 const modal = document.querySelector('.modal');
-const overlay = document.querySelector('.overlay');
-const employee = document.querySelector('.employee');
-var displayedEmployees = document.getElementsByClassName('employee');
-const input = document.querySelector('input');
-
-// -------------------------------------------------------------------------------------------------------------- Fetch API
-
-fetch(APIURL)
-    .then(data => data.json())
-    .then(res => res.results)
-    .then(objs => objs.forEach(element => {
-        employees.push(element);
-        return appendEmployee(element);
-        }))
-    .catch(err => alert('Seems like there was an error', err))
-;
+const modalClose = document.querySelector('.close');
 
 
-console.log(employees);
-// -------------------------------------------------------------------------------------------------------------- Functions
+//--------------------------------------------------------------------------------------- Classes
 
-// Helper Function
-  
-function appendEmployee(obj){
-    const newEmployee = document.createElement('DIV');
-    newEmployee.className = "employee";
-    employeeGrid.appendChild(newEmployee);
+
+
+class Employee {
     
-    newEmployee.innerHTML = `
-        <img src="${obj.picture.medium}" alt="">
-        <div class="text-container">
-            <h2 class="name">${obj.name.first} ${obj.name.last}</h2>
-            <p class="email">${obj.email}</p>
-            <p class="city">${obj.location.city}</p>
-        </div>
-    `;
-};
+    constructor(picture, fullname, email, city, phone, address, dob){
+        this.picture = picture;
+        this.fullname = fullname;
+        this.email = email;
+        this.city = city;
+        this.phone = phone;
+        this.address = address;
+        this.dob = dob;
+        this._filter = true;
+    }
 
-
-function getIndex(arr, element){
-    for (let i = 0; i < arr.length; i++){
-        if(arr[i] === element){
-            return i;
+    set isFiltered(filtered) {
+        this._filtered = filtered;
+        if (search.startsWith(fullname) === true) {
+            filtered = true;
+        } else {
+            filtered = false;
         }
+    }
+
+    get isFiltered() {
+        return this._filtered;
+    }
+
+    get employeeData(){
+
     }
 }
 
-function switchModal(targetObj){
-    const targetDOB = new Date(targetObj.dob.date);
-    modal.innerHTML = `
-        <p class=close>Close</p>
-        <p class="next">Next</p>
-        <p class="prev"> Prev</p>
-        <img src="${targetObj.picture.medium}" alt="">
-        <h2 class="name">${targetObj.name.first} ${targetObj.name.last}</h2>
-        <p class="email">${targetObj.email}</p>
-        <p class="city">${targetObj.location.city}</p>
-        <hr>
-        <p class="phone">${targetObj.phone}</p>
-        <p class="address">${targetObj.location.street.number} ${targetObj.location.street.name} ${targetObj.location.postcode}</p>
-        <p class="birthday">Birthday: ${`${targetDOB.getMonth()+1}/${targetDOB.getDate()}/${targetDOB.getFullYear()}`}</p>
-    `
-    modal.style.display = 'flex';
-    overlay.style.display = 'flex';
+
+
+//--------------------------------------------------------------------------------------- Fetch API
+
+fetch(apiUrl)
+    .then(response => response.json() )
+    .then(data => data.results)
+    .then(objs => addEmployees(objs) )
+    .then(arr => console.log(arr))
+;
+
+
+//--------------------------------------------------------------------------------------- Functions
+
+
+
+function makeDate(apiDate){
+    var date = new Date(apiDate)
+    var month = date.getMonth()+1;
+    var day = date.getDate(); 
+    var year = date.getFullYear();
+    var formattedDate = `${month}/${day}/${year}`
+    return formattedDate;
 }
+
+function addEmployees(objs){
+    console.log(objs)
+    objs.forEach(obj => {
+        var newEmployee = new Employee(obj.picture.large, `${obj.name.first} ${obj.name.last}`, obj.email, obj.location.city, obj.phone, `${obj.location.street.number} ${obj.location.street.name} ${obj.location.postcode}`, makeDate(obj.dob.date, true) )
+        employees.push(newEmployee);
+    })
+    return employees;
+}
+
+function displayEmployee(arr){
+    arr.forEach(obj => {
+        if(obj.startsWith(search) === true ){
+            obj.filter = true;
+        } else {
+            obj.filter = false;
+        }
+    });
+}
+
+//--------------------------------------------------------------------------------------- Event Listeners
+
+document.addEventListener('click', (e) => {
+    console.log(employees);
+});
+
+//--------------------------------------------------------------------------------------- Notes/Tests
 
 
 
 /*
-    const filteredEmployees = employees.filter(obj => {
-        return obj.name.first.toUpperCase().startsWith(liveSearchText.toUpperCase());
-    });
-    filteredEmployees.forEach(obj => appendEmployee(obj));
-    
-    console.log(employees);
-    console.log(filteredEmployees)
+
+this.img = this.picture.large;
+        this.fullname = `${this.name.first} ${this.name.last}`;
+        this.email = this.email;
+        this.city = this.location.city;
+        this.phone = this.phone;
+        this.address = `${this.location.street.number} ${this.location.street.name} ${this.location.postcode}`;
+        this.dob = makeDate(this.dob.date)
+
 */
-
-
-function filterEmployees(search, arr){
-
-
-
-    filteredEmployees = arr.filter(obj => {
-        return obj.name.first.toUpperCase().startsWith(liveSearchText.toUpperCase());
-    });
-    filteredEmployees.forEach(obj => appendEmployee(obj))
-
-
-
-
-
-
-
-
-
-    arr.forEach(obj => {
-        if (obj.name.first.startsWith( search.toUpperCase() ) === true){
-            filteredEmployees.push(obj);
-            appendEmployee(obj);
-        }
-    });
-
-}
-
-// -------------------------------------------------------------------------------------------------------------- Modal
-
-// ----------------------------------------------- Opens Modal
-
-document.addEventListener('click', (e) => {
-    if(e.target.className === 'employee'){
-        const targetObj = employees[getIndex(displayedEmployees, e.target)];
-        const targetDOB = new Date(targetObj.dob.date);
-        modal.innerHTML = `
-            <p class=close>Close</p>
-            <p class="next">Next</p>
-            <p class="prev"> Prev</p>
-            <img src="${targetObj.picture.medium}" alt="">
-            <h2 class="name">${targetObj.name.first} ${targetObj.name.last}</h2>
-            <p class="email">${targetObj.email}</p>
-            <p class="city">${targetObj.location.city}</p>
-            <hr>
-            <p class="phone">${targetObj.phone}</p>
-            <p class="address">${targetObj.location.street.number} ${targetObj.location.street.name} ${targetObj.location.postcode}</p>
-            <p class="birthday">Birthday: ${`${targetDOB.getMonth()+1}/${targetDOB.getDate()}/${targetDOB.getFullYear()}`}</p>
-        `
-        modal.style.display = 'flex';
-        overlay.style.display = 'flex';
-    } 
-});
-
-// ----------------------------------------------- Closes Modal
-
-document.addEventListener('click', (e)=> {
-    if(e.target.className === 'close' || e.target.className === 'overlay' ){
-        modal.style.display = 'none';
-        overlay.style.display = 'none';
-    }
-});
-
-// ----------------------------------------------- Filter
-
-const keys = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-              "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z", "Backspace"];
-
-document.addEventListener('keyup', (e) => {
-    if (keys.includes(e.key)){
-
-
-        console.log('filtered employees:');
-        console.log(filteredEmployees);
-
-
-
-
-
-        employeeGrid.innerHTML = '';
-        const liveSearchText = input.value;
-        filterEmployees(liveSearchText, employees)
-
-
-
-
-
-        /*
-        const filteredEmployees = employees.filter(obj => {
-            return obj.name.first.toUpperCase().startsWith(liveSearchText.toUpperCase());
-        });
-        filteredEmployees.forEach(obj => appendEmployee(obj));
-        
-        console.log(employees);
-        console.log(filteredEmployees)
-        */
-    }
-    
-});
-
-
-
-// ----------------------------------------------- Arrows
-
-document.addEventListener('click', (e)=> {
-    if(e.target.className === 'next'){
-        console.log(e.target.parentElement)
-        console.log( getIndex(displayedEmployees, e.target.parentElement) )
-        switchModal(e.target.parentNode)
-    }
-});
-
-document.addEventListener('click', (e)=> {
-    if(e.target.className === 'prev' || e.target.className === 'overlay' ){
-        modal.style.display = 'none';
-        overlay.style.display = 'none';
-    }
-});
-
-//Get index function isn't working becuase I'm calling the target's ('Next') parent (the modal)
-
-// Create a P element that is hidden that has a number asscoiated with it
-// Take name on modal, loop through name of items (not DRY), get index
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
