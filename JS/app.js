@@ -88,7 +88,7 @@ function addEmployees(objs){
 
 function searchFilter(arr){
     arr.forEach(obj => {
-        if (obj.fullname.toUpperCase().startsWith(search.value.toUpperCase()) === true){
+        if (obj.fullname.toUpperCase().includes(search.value.toUpperCase()) === true){
             obj.isFiltered = true;
         } else {
             obj.isFiltered = false;
